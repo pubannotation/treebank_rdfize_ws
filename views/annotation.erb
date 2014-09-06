@@ -1,0 +1,24 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pubann: <http://pubannotation.org/ontology/pubannotation.owl#> .
+@prefix penn: <http://example.org/penntag.owl#> .
+@base <%= "<#{@project_uri}#>" %> .
+<% span_uris = [] -%>
+<% if @denotations -%>
+<% @denotations.each do |d| -%>
+<% span_uri = "<#{@text_uri}/spans/#{d[:span][:begin]}-#{d[:span][:end]}>" -%>
+<% span_uris << {:span => span_uri, :text => @text_uri, :begin => d[:span][:begin], :end => d[:span][:end]} -%>
+<% d[:obj] = 'SYM' if d[:obj].match(/\W/) -%>
+<%= "<#{@text_id}-#{d[:id]}>" %> rdf:type pubann:Context_entity ;
+	pubann:denoted_by <%= span_uri %> ;
+	rdf:type penn:<%= d[:obj] %> .
+<% end -%>
+<% end -%>
+<% span_uris.uniq! -%>
+<% span_uris.each do |u| -%>
+<%= u[:span] %> rdf:type pubann:Text_span ;
+	pubann:has_value "<%= @text[u[:begin] ... u[:end]] %>" ;
+	pubann:part_of <%= "<#{u[:text]}>" %> ;
+	pubann:begins_at <%= u[:begin] %> ;
+	pubann:ends_at <%= u[:end] %> .
+<% end -%>
